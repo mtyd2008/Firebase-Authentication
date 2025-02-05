@@ -1,20 +1,29 @@
 import { onAuthStateChanged , signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { auth } from "./fireconfig.js"
+import { auth, db } from "./fireconfig.js"
+import { collection, getDocs, query, addDoc} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+const form = document.querySelector("#form")
+const todo = document.querySelector("#todo")
+const ul = document.querySelector("#ul")
+const logout = document.querySelector("#logout-btn")
+
+//Global arraay
+const todoArr = []
 
 
-
+// check user login
 onAuthStateChanged(auth,  (user) => {
   if (user) {
     const uid = user.uid;
     console.log(uid);
-
+    getDataFromFirestore()
   } else {
     window.location = "login.html"
   }
 });
 
-const logout = document.querySelector("#logout-btn")
 
+// logout function
 logout.addEventListener('click' , ()=>{
     signOut(auth).then(() => {
         console.log('logout sucessfully');
@@ -27,3 +36,41 @@ logout.addEventListener('click' , ()=>{
 })
 
 
+//Get data from firestore
+async function getDataFromFirestore() {
+  const q = query(collection(db, "todos"), where("uid", "==", auth.currentUser.uid));
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach((doc) => {
+      todoArr.push({
+          ...doc.data(),
+          docid: doc.id
+      })
+  });
+
+  console.log(todoArr);
+
+  todoArr.map(item => {
+      ul.innerHTML += `<li>${item.todo}</li>`
+  })
+}
+
+
+
+//add data to firestore
+form.addEventListener('submit' , async (event)=>{
+  event.preventDefault()
+  console.log(todo.value);
+
+  try {
+    const docRef = await addDoc(collection(db, "todos"), {
+    Todo: todo.value,
+    uid: auth.currentUser.uid
+  });
+  
+    console.log("Document written with ID: ", docRef.id);
+  }
+  catch (e) {
+    console.log("Error adding document: ", e);
+  }
+  todo.value = ''
+})
