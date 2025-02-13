@@ -1,15 +1,14 @@
 import { onAuthStateChanged , signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 import { auth, db } from "./fireconfig.js"
-import { collection, getDocs, query, addDoc} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+import { collection, query, where, getDocs, addDoc} from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 const form = document.querySelector("#form")
 const todo = document.querySelector("#todo")
 const ul = document.querySelector("#ul")
 const logout = document.querySelector("#logout-btn")
 
-//Global arraay
+//global array
 const todoArr = []
-
 
 // check user login
 onAuthStateChanged(auth,  (user) => {
@@ -40,17 +39,15 @@ logout.addEventListener('click' , ()=>{
 async function getDataFromFirestore() {
   const q = query(collection(db, "todos"), where("uid", "==", auth.currentUser.uid));
   const querySnapshot = await getDocs(q);
+  
   querySnapshot.forEach((doc) => {
-      todoArr.push({
-          ...doc.data(),
-          docid: doc.id
-      })
+      todoArr.push({ ...doc.data(), Id: doc.id})
   });
 
   console.log(todoArr);
 
   todoArr.map(item => {
-      ul.innerHTML += `<li>${item.todo}</li>`
+      ul.innerHTML += `<li>${item.Todo}</li>`
   })
 }
 
